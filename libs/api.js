@@ -5,6 +5,7 @@ const fs = require('fs')
 const logger = console
 const path = require('path')
 const httpMethods = require('../utils/http-methods')
+const { parseCqlText, parseCqlJson } = require('./cql')
 
 // max number of collections to retrieve
 const COLLECTION_LIMIT = process.env.STAC_SERVER_COLLECTION_LIMIT || 100
@@ -62,7 +63,21 @@ const extractBbox = function (params) {
 
 const extractStacQuery = function (params) {
   let stacQuery
-  const { query } = params
+  const { filter, query } = params
+  // TODO: no implemented reprojection
+  // const filter_crs = params['filter-crs'] || 'EPSG:4326'
+  const filter_lang = params['filter-lang'] || 'cql-text'
+
+  if (filter) {
+    if (filter_lang === 'cql-text') {
+      const parsed = parseCqlText(filter)
+      console.log(parsed)
+      return parsed
+    }
+    const parsed = parseCqlJson(filter)
+    return parsed
+  }
+
   if (query) {
     if (typeof query === 'string') {
       const parsed = JSON.parse(query)
@@ -73,6 +88,7 @@ const extractStacQuery = function (params) {
   }
   return stacQuery
 }
+
 
 const extractSortby = function (params) {
   let sortbyRules
@@ -360,7 +376,7 @@ const searchItems = async function (collectionId, queryParameters, backend, endp
   } = queryParameters
   const bbox = extractBbox(queryParameters)
   const hasIntersects = extractIntersects(queryParameters)
-  // TODO: Figure out, why is this not allowed?
+  // TODO: why is this not allowed?
   // if (bbox && hasIntersects) {
   //   throw new Error('Expected bbox OR intersects, not both')
   // }
