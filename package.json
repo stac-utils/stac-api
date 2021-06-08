@@ -55,5 +55,9 @@
     "sinon": "^7.1.1",
     "widdershins": "^3.6.6"
   },
-  "name": "stac-server"
+  "name": "stac-server",
+  "engines": {
+    "node": ">=14.0.0",
+    "npm": ">=7.0.0"
+  }
 }
